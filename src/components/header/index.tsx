@@ -44,12 +44,24 @@ export function Header() {
     <>
       <span className="flex justify-self-start">
         <Link to="/" className="flex gap-2 items-center">
-          <div className="h-10 w-10 bg-cover" title="logo" style={{ backgroundImage: "url(/icon.svg)" }} />
+          <img
+            src="/icon.svg"
+            alt="logo"
+            className="h-10 w-10 object-contain border border-gray-300"
+            onError={(e) => {
+              console.error("Logo failed to load:", e)
+              // 如果SVG加载失败，显示一个备用的文字logo
+              e.currentTarget.style.display = "none"
+            }}
+            onLoad={() => {
+              console.log("Logo loaded successfully")
+            }}
+          />
           <span className="text-2xl font-brand line-height-none!">
-            <p>News</p>
+            <p>Your Daily</p>
             <p className="mt--1">
               <span className="color-primary-6">N</span>
-              <span>ow</span>
+              <span>ews</span>
             </p>
           </span>
         </Link>
