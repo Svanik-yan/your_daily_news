@@ -33,7 +33,8 @@ const nitroOption: Parameters<typeof viteNitro>[0] = {
 }
 
 if (process.env.VERCEL) {
-  nitroOption.preset = "vercel-edge"
+  // 使用vercel预设而不是vercel-edge，以支持PostgreSQL数据库
+  nitroOption.preset = "vercel"
   // 使用Vercel Marketplace提供的Postgres数据库
   // 环境变量会在创建数据库后自动注入
   if (process.env.POSTGRES_URL) {
