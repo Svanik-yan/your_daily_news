@@ -23,7 +23,10 @@ export class Cache {
   async set(key: string, value: NewsItem[]) {
     const now = Date.now()
     await this.db.prepare(
-      `INSERT OR REPLACE INTO cache (id, data, updated) VALUES (?, ?, ?)`,
+      `INSERT INTO cache (id, data, updated) VALUES (?, ?, ?) 
+       ON CONFLICT (id) DO UPDATE SET 
+       data = EXCLUDED.data, 
+       updated = EXCLUDED.updated`,
     ).run(key, JSON.stringify(value), now)
     logger.success(`set ${key} cache`)
   }
@@ -41,7 +44,7 @@ export class Cache {
   }
 
   async getEntire(keys: string[]): Promise<CacheInfo[]> {
-    const keysStr = keys.map(k => `id = '${k}'`).join(" or ")
+    const keysStr = keys.map(k => `id = '${k}'`).join(" OR ")
     const res = await this.db.prepare(`SELECT id, data, updated FROM cache WHERE ${keysStr}`).all() as any
     const rows = (res.results ?? res) as CacheRow[]
 
