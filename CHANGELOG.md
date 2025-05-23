@@ -4,6 +4,91 @@
 
 ---
 
+## 2025-01-25 14:35 - 🗄️ 添加Vercel Postgres数据库支持
+
+### 🎯 更改目标
+配置NewsNow应用支持Vercel Marketplace的Postgres数据库，解决500错误问题，恢复完整的缓存和刷新功能。
+
+### 📋 修改文件列表
+1. `nitro.config.ts` - 数据库配置
+
+### 📝 详细更改内容
+
+#### `nitro.config.ts`
+
+**更改前：**
+```typescript
+if (process.env.VERCEL) {
+  nitroOption.preset = "vercel-edge"
+  // You can use other online database, do it yourself. For more info: https://db0.unjs.io/connectors
+  nitroOption.database = undefined
+}
+```
+
+**更改后：**
+```typescript
+if (process.env.VERCEL) {
+  nitroOption.preset = "vercel-edge"
+  // 使用Vercel Marketplace提供的Postgres数据库
+  // 环境变量会在创建数据库后自动注入
+  if (process.env.POSTGRES_URL) {
+    nitroOption.database = {
+      default: {
+        connector: "postgresql",
+        options: {
+          url: process.env.POSTGRES_URL,
+        },
+      },
+    }
+  } else {
+    // 如果没有数据库，记录警告但不抛出错误
+    console.warn("⚠️ No database configured for Vercel. Please add a database from Vercel Dashboard.")
+  }
+}
+```
+
+### 🔧 配置说明
+
+#### 数据库连接器配置：
+- **开发环境**: `better-sqlite3` (本地SQLite文件)
+- **Vercel生产环境**: `postgresql` (Marketplace Postgres)
+- **Cloudflare Pages**: `cloudflare-d1` (D1数据库)
+- **Bun环境**: `bun-sqlite` (Bun优化的SQLite)
+
+#### 环境变量自动检测：
+- 检测 `POSTGRES_URL` 环境变量
+- 自动配置数据库连接
+- 提供友好的警告信息
+
+### 📊 预期效果
+
+#### 解决的问题：
+- ✅ **500错误消失**：数据库连接正常
+- ✅ **缓存功能恢复**：可以存储和读取缓存数据
+- ✅ **刷新功能正常**：强制刷新和缓存刷新都可用
+- ✅ **性能提升**：减少重复API调用
+
+#### 用户体验改善：
+- 🚀 **更快的加载速度**：缓存机制生效
+- 🔄 **可靠的刷新功能**：用户可以强制获取最新数据
+- 💾 **数据持久化**：缓存数据在部署间保持
+- 📈 **更好的性能**：减少对外部API的依赖
+
+### 🚀 部署说明
+
+#### 下一步操作：
+1. 在Vercel Dashboard的Storage页面创建Postgres数据库
+2. 数据库创建后，`POSTGRES_URL`环境变量会自动注入
+3. 应用会自动重新部署并连接到数据库
+4. 缓存表会在首次访问时自动创建
+
+#### 验证方法：
+- 访问应用，检查是否还有500错误
+- 测试刷新功能是否正常工作
+- 观察数据加载速度是否提升
+
+---
+
 ## 2025-01-25 14:25 - 🔧 调试和重启服务器
 
 ### 🎯 调试目标
