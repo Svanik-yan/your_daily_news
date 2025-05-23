@@ -1,5 +1,6 @@
 import type { SourceID } from "@shared/types"
 import { useUpdateQuery } from "./query"
+import { refetchSources } from "~/utils/data"
 
 export function useRefetch() {
   const updateQuery = useUpdateQuery()
