@@ -17,13 +17,13 @@ export default defineEventHandler(async (event): Promise<SourceResponse> => {
     }
 
     const cacheTable = await getCacheTable()
-    // Date.now() in Cloudflare Worker will not update throughout the entire runtime.
     const now = Date.now()
     let cache: CacheInfo | undefined
+
+    // 如果有数据库，尝试使用缓存逻辑
     if (cacheTable) {
       cache = await cacheTable.get(id)
       if (cache) {
-      // if (cache) {
         // interval 刷新间隔，对于缓存失效也要执行的。本质上表示本来内容更新就很慢，这个间隔内可能内容压根不会更新。
         // 默认 10 分钟，是低于 TTL 的，但部分 Source 的更新间隔会超过 TTL，甚至有的一天更新一次。
         if (now - cache.updated < sources[id].interval) {
@@ -51,12 +51,16 @@ export default defineEventHandler(async (event): Promise<SourceResponse> => {
       }
     }
 
+    // 获取最新数据
     try {
       const newData = (await getters[id]()).slice(0, 30)
+
+      // 只有在数据库可用时才保存缓存
       if (cacheTable && newData.length) {
         if (event.context.waitUntil) event.context.waitUntil(cacheTable.set(id, newData))
         else await cacheTable.set(id, newData)
       }
+
       logger.success(`fetch ${id} latest`)
       return {
         status: "success",
@@ -65,7 +69,8 @@ export default defineEventHandler(async (event): Promise<SourceResponse> => {
         items: newData,
       }
     } catch (e) {
-      if (cache!) {
+      // 如果获取失败且有缓存，返回缓存
+      if (cache) {
         return {
           status: "cache",
           id,

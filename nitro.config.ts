@@ -34,13 +34,21 @@ const nitroOption: Parameters<typeof viteNitro>[0] = {
 
 if (process.env.VERCEL) {
   nitroOption.preset = "vercel-edge"
-  // You can use other online database, do it yourself. For more info: https://db0.unjs.io/connectors
-  nitroOption.database = undefined
-  // nitroOption.vercel = {
-  //   config: {
-  //     cache: []
-  //   },
-  // }
+  // 使用Vercel Marketplace提供的Postgres数据库
+  // 环境变量会在创建数据库后自动注入
+  if (process.env.POSTGRES_URL) {
+    nitroOption.database = {
+      default: {
+        connector: "postgresql",
+        options: {
+          url: process.env.POSTGRES_URL,
+        },
+      },
+    }
+  } else {
+    // 如果没有数据库，记录警告但不抛出错误
+    console.warn("⚠️ No database configured for Vercel. Please add a database from Vercel Dashboard.")
+  }
 } else if (process.env.CF_PAGES) {
   nitroOption.preset = "cloudflare-pages"
   nitroOption.unenv = {
