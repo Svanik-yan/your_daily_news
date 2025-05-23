@@ -13,10 +13,20 @@ export class Cache {
     await this.db.prepare(`
       CREATE TABLE IF NOT EXISTS cache (
         id TEXT PRIMARY KEY,
-        updated INTEGER,
+        updated BIGINT,
         data TEXT
       );
     `).run()
+
+    try {
+      await this.db.prepare(`
+        ALTER TABLE cache ALTER COLUMN updated TYPE BIGINT;
+      `).run()
+      logger.info(`migrated cache table updated column to BIGINT`)
+    } catch (e) {
+      logger.info(`cache table migration skipped: ${e}`)
+    }
+
     logger.success(`init cache table`)
   }
 
